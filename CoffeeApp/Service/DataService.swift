@@ -1,0 +1,432 @@
+//
+//  DataService.swift
+//  CoffeeApp
+//
+//  Created by Enes Sancar on 31.10.2023.
+//
+
+import FirebaseAuth
+import FirebaseFirestore
+import FirebaseStorage
+
+final class DataService {
+    
+    static let shared = DataService()
+    private init() {}
+    
+    func fetchAllCategoriesWithCoffees(completion: @escaping (Result<[(CoffeeCategoryModel, [CoffeeModel])], Error>) -> Void) {
+        var cetegoriesWithCoffees: [(CoffeeCategoryModel, [CoffeeModel])] = []
+        
+        // Firestore dan tum kategorileri cekme
+        let dbRef = Firestore.firestore().collection(FirebaseConstants.coffeeCategories)
+        dbRef.getDocuments { categoryQuerySnapshot, error in
+            guard let categoryDocuments = categoryQuerySnapshot?.documents else {
+                completion(.failure(AppError.dataFetchingFailed))
+                return
+            }
+            
+            let group = DispatchGroup()
+            
+            for categoryDocument in categoryDocuments {
+                let categoryData = categoryDocument.data()
+                
+                do {
+                    let jsonData = try JSONSerialization.data(withJSONObject: categoryData)
+                    let category = try CoffeeCategoryModel.fromDictionary(jsonData: jsonData)
+                    
+                    var coffees: [CoffeeModel] = []
+                    
+                    for coffeeID in category.coffeeIDs {
+                        group.enter()
+                        Firestore.firestore().collection(FirebaseConstants.coffees).document(coffeeID).getDocument { coffeeDocument, error in
+                            guard let coffeeData = coffeeDocument?.data() else {
+                                group.leave()
+                                return
+                            }
+                            do {
+                                let coffeeJsonData = try JSONSerialization.data(withJSONObject: coffeeData)
+                                let coffee = try CoffeeModel.fromDictionary(jsonData: coffeeJsonData)
+                                coffees.append(coffee)
+                            } catch {
+                                print("Error decoding coffe data: \(error)")
+                            }
+                            group.leave()
+                        }
+                    }
+                    group.notify(queue: .main) {
+                        cetegoriesWithCoffees.append((category, coffees))
+                    }
+                } catch {
+                    print("Error decoding category data: \(error)")
+                }
+            }
+            group.notify(queue: .main) {
+                completion(.success(cetegoriesWithCoffees))
+            }
+        }
+    }
+    
+    func updateWishList(userID: String, WishListItem: WishlistItemModel, completion: @escaping (Result<Void, Error>) -> Void) {
+        let dbRef = Firestore.firestore().collection(FirebaseConstants.usersCollection).document(userID)
+        
+        // Önce kullanıcının mevcut istek listesi
+        dbRef.getDocument { document, error in
+            if let document = document, document.exists, let data = document.data() {
+                var wishlist = data[FirebaseConstants.wishList] as? [[String: Any]] ?? []
+                
+                // Eğer bu kahve zaten listeye eklenmişse
+                if let index = wishlist.firstIndex(where: { ($0["coffeeID"] as? String) == WishListItem.coffeeID }) {
+                    wishlist.remove(at: index)
+                } else {
+                    // Eğer kahve listeye eklenmemişse
+                    do {
+                        let wishListItemDict = try WishListItem.toDictionary()
+                        wishlist.append(wishListItemDict)
+                    } catch {
+                        completion(.failure(AppError.dataEncodingFailed))
+                        return
+                    }
+                }
+                // Güncellenmiş listeyi geri yükle
+                dbRef.updateData([FirebaseConstants.wishList: wishlist]) { error in
+                    if let error = error {
+                        completion(.failure(AppError.custom(error.localizedDescription)))
+                    } else {
+                        completion(.success(()))
+                    }
+                }
+            } else {
+                completion(.failure(AppError.custom(error?.localizedDescription ?? "Unknown error.")))
+            }
+        }
+    }
+    
+    func addToBasket(coffeeID: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let userID = Auth.auth().currentUser?.uid else {
+            completion(.failure(AppError.unknown))
+            return
+        }
+        
+        let dbRef = Firestore.firestore().collection(FirebaseConstants.usersCollection).document(userID)
+        
+        dbRef.getDocument { document, error in
+            if let document = document, document.exists, let data = document.data() {
+                if let shoppingCartData = data[FirebaseConstants.shoppingCart] as? [String: Any] {
+                    do {
+                        let jsonData = try JSONSerialization.data(withJSONObject: shoppingCartData, options: [])
+                        var shoppingCart = try ShoppingCardModel.fromDictionary(jsonData: jsonData)
+                        
+                        if let index = shoppingCart.items.firstIndex(where: {
+                            $0.coffeeID == coffeeID
+                        }) {
+                            shoppingCart.items[index].quantity += 1
+                        } else {
+                            let newItem = ShoppingCardItemModel(coffeeID: coffeeID, quantity: 1)
+                            shoppingCart.items.append(newItem)
+                        }
+                        
+                        let updatedCartDict = try shoppingCart.toDictionary()
+                        dbRef.updateData([FirebaseConstants.shoppingCart: updatedCartDict]) { error in
+                            if let error = error {
+                                completion(.failure(AppError.custom(error.localizedDescription)))
+                            } else {
+                                completion(.success(()))
+                            }
+                        }
+                    } catch {
+                        print("Error decoding shopping cart: \(error)")
+                        completion(.failure(AppError.dataEncodingFailed))
+                    }
+                } else {
+                    completion(.failure(AppError.custom("Shopping cart data is not available.")))
+                }
+            } else {
+                completion(.failure(AppError.custom(error?.localizedDescription ?? "Unknown error.")))
+            }
+        }
+    }
+    
+    func listenToUserWishlist(userID: String, completion: @escaping (Result<[WishlistItemModel], Error>) -> Void) {
+        let dbRef = Firestore.firestore().collection(FirebaseConstants.usersCollection).document(userID)
+        
+        dbRef.addSnapshotListener { document, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            if let document = document, document.exists, let data = document.data() {
+                do {
+                    if let wishlistData = data[FirebaseConstants.wishList] as? [[String: Any]] {
+                        let wishlistItems = try wishlistData.map { itemData -> WishlistItemModel in
+                            let jsonData = try JSONSerialization.data(withJSONObject: itemData, options: [])
+                            return try JSONDecoder().decode(WishlistItemModel.self, from: jsonData)
+                        }
+                        completion(.success(wishlistItems))
+                    } else {
+                        completion(.failure(AppError.custom("Wishlist data is not available.")))
+                    }
+                } catch {
+                    completion(.failure(error))
+                }
+            }
+        }
+    }
+    
+    func listenToUserShoppingCart(userID: String, completion: @escaping (Result<ShoppingCardModel, Error>) -> Void) {
+        let dbRef = Firestore.firestore().collection(FirebaseConstants.usersCollection).document(userID)
+        
+        dbRef.addSnapshotListener { document, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            if let document = document, document.exists, let data = document.data() {
+                do {
+                    if let shoppingCartData = data[FirebaseConstants.shoppingCart] as? [String: Any] {
+                        let jsonData = try JSONSerialization.data(withJSONObject: shoppingCartData, options: [])
+                        let shoppingCart = try JSONDecoder().decode(ShoppingCardModel.self, from: jsonData)
+                        completion(.success(shoppingCart))
+                    } else {
+                        completion(.failure(AppError.custom("Shopping cart data is not available.")))
+                    }
+                } catch {
+                    completion(.failure(error))
+                }
+            }
+        }
+    }
+    
+    func increaseCoffeeQuantityInBasket(userID: String, coffeeID: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        let dbRef = Firestore.firestore().collection(FirebaseConstants.usersCollection).document(userID)
+        
+        dbRef.getDocument { document, error in
+            if let document = document, document.exists, let data = document.data() {
+                if let shoppingCartData = data[FirebaseConstants.shoppingCart] as? [String: Any] {
+                    do {
+                        let jsonData = try JSONSerialization.data(withJSONObject: shoppingCartData, options: [])
+                        var shoppingCart = try ShoppingCardModel.fromDictionary(jsonData: jsonData)
+                        
+                        if let index = shoppingCart.items.firstIndex(where: { $0.coffeeID == coffeeID }) {
+                            shoppingCart.items[index].quantity += 1
+                        } else {
+                            let newItem = ShoppingCardItemModel(coffeeID: coffeeID, quantity: 1)
+                            shoppingCart.items.append(newItem)
+                        }
+                        
+                        let updatedCartDict = try shoppingCart.toDictionary()
+                        dbRef.updateData([FirebaseConstants.shoppingCart: updatedCartDict]) { error in
+                            if let error = error {
+                                completion(.failure(AppError.custom(error.localizedDescription)))
+                            } else {
+                                completion(.success(()))
+                            }
+                        }
+                    } catch {
+                        print("Error decoding shopping cart: \(error)")
+                        completion(.failure(AppError.dataEncodingFailed))
+                    }
+                } else {
+                    completion(.failure(AppError.custom("Shopping cart data is not available.")))
+                }
+            } else {
+                completion(.failure(AppError.custom(error?.localizedDescription ?? "Unknown error.")))
+            }
+        }
+    }
+    
+    func decreaseCoffeeQuantityInBasket(userID: String, coffeeID: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        let dbRef = Firestore.firestore().collection(FirebaseConstants.usersCollection).document(userID)
+        
+        dbRef.getDocument { document, error in
+            if let document = document, document.exists, let data = document.data() {
+                if let shoppingCartData = data[FirebaseConstants.shoppingCart] as? [String: Any] {
+                    do {
+                        let jsonData = try JSONSerialization.data(withJSONObject: shoppingCartData, options: [])
+                        var shoppingCart = try ShoppingCardModel.fromDictionary(jsonData: jsonData)
+                        
+                        if let index = shoppingCart.items.firstIndex(where: { $0.coffeeID == coffeeID }) {
+                            shoppingCart.items[index].quantity = max(shoppingCart.items[index].quantity - 1, 0)
+                        }
+                        
+                        let updatedCartDict = try shoppingCart.toDictionary()
+                        dbRef.updateData([FirebaseConstants.shoppingCart: updatedCartDict]) { error in
+                            if let error = error {
+                                completion(.failure(AppError.custom(error.localizedDescription)))
+                            } else {
+                                completion(.success(()))
+                            }
+                        }
+                    } catch {
+                        print("Error decoding shopping cart: \(error)")
+                        completion(.failure(AppError.dataEncodingFailed))
+                    }
+                } else {
+                    completion(.failure(AppError.custom("Shopping cart data is not available.")))
+                }
+            } else {
+                completion(.failure(AppError.custom(error?.localizedDescription ?? "Unknown error.")))
+            }
+        }
+    }
+    
+    func removeCoffeeFromBasket(userID: String, coffeeID: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        let dbRef = Firestore.firestore().collection(FirebaseConstants.usersCollection).document(userID)
+        
+        dbRef.getDocument { document, error in
+            if let document = document, document.exists, let data = document.data() {
+                if let shoppingCartData = data[FirebaseConstants.shoppingCart] as? [String: Any] {
+                    do {
+                        let jsonData = try JSONSerialization.data(withJSONObject: shoppingCartData, options: [])
+                        var shoppingCart = try ShoppingCardModel.fromDictionary(jsonData: jsonData)
+                        
+                        if let index = shoppingCart.items.firstIndex(where: { $0.coffeeID == coffeeID }) {
+                            shoppingCart.items.remove(at: index)
+                        }
+                        
+                        let updatedCartDict = try shoppingCart.toDictionary()
+                        dbRef.updateData([FirebaseConstants.shoppingCart: updatedCartDict]) { error in
+                            if let error = error {
+                                completion(.failure(AppError.custom(error.localizedDescription)))
+                            } else {
+                                completion(.success(()))
+                            }
+                        }
+                    } catch {
+                        print("Error decoding shopping cart: \(error)")
+                        completion(.failure(AppError.dataEncodingFailed))
+                    }
+                } else {
+                    completion(.failure(AppError.custom("Shopping cart data is not available.")))
+                }
+            } else {
+                completion(.failure(AppError.custom(error?.localizedDescription ?? "Unknown error.")))
+            }
+        }
+    }
+    
+    func uploadImageToFirebaseStorage(_ image: UIImage, completion: @escaping (String?) -> Void) {
+        let storageRef = Storage.storage().reference().child("post_images/\(UUID().uuidString).jpg")
+        
+        if let uploadData = image.jpegData(compressionQuality: 0.8) {
+            storageRef.putData(uploadData, metadata: nil) { _, error in
+                if error != nil {
+                    print("Failed to upload image: \(error!.localizedDescription)")
+                    completion(nil)
+                    return
+                }
+                
+                storageRef.downloadURL { url, error in
+                    if let imageUrl = url?.absoluteString {
+                        completion(imageUrl)
+                    } else {
+                        print("Failed to fetch download URL: \(error?.localizedDescription ?? "No error description.")")
+                        completion(nil)
+                    }
+                }
+            }
+        }
+    }
+    
+    func saveNewPostToFirestore(userID: String, image: UIImage, description: String, completion: @escaping (Bool) -> Void) {
+        // resmi Firebase Storage'a yükleme
+        uploadImageToFirebaseStorage(image) { imageUrl in
+            guard let imageUrl = imageUrl else {
+                print("Failed to upload image to storage.")
+                completion(false)
+                return
+            }
+            // Resmin URL'siyle bir post oluşturma
+            let postID = UUID().uuidString
+            let newPost = PostModel(postID: postID, userID: userID, imageURL: imageUrl, desctiption: description, creationDate: Date(), commentIDs: [])
+            
+            // Yeni postu Firestore'a ekleme
+            let dbRef = Firestore.firestore().collection(FirebaseConstants.posts).document(postID)
+            do {
+                let postData = try newPost.toDictionary()
+                dbRef.setData(postData) { error in
+                    if let error = error {
+                        print("Failed to save post: \(error.localizedDescription)")
+                        completion(false)
+                        return
+                    }
+                    
+                    let userRef = Firestore.firestore().collection(FirebaseConstants.usersCollection).document(userID)
+                    userRef.updateData([
+                        FirebaseConstants.postIDs: FieldValue.arrayUnion([postID]),
+                    ]) { error in
+                        if let error = error {
+                            print("Failed to update user's postIDs: \(error.localizedDescription)")
+                            completion(false)
+                        } else {
+                            completion(true)
+                        }
+                    }
+                }
+            } catch {
+                print("Failed to encode post: \(error.localizedDescription)")
+                completion(false)
+            }
+        }
+    }
+    
+    func listenToAllUsersWithPosts(completion: @escaping (Result<[(user: UserModel, posts: [PostModel])], Error>) -> Void) {
+        let db = Firestore.firestore()
+        
+        db.collection(FirebaseConstants.posts).order(by: "creationDate", descending: true).addSnapshotListener { postsSnapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let postDocuments = postsSnapshot?.documents else {
+                completion(.failure(NSError(domain: "No posts found", code: -1, userInfo: nil)))
+                return
+            }
+            
+            var postWithUsers: [PostModel] = []
+            postDocuments.forEach { postDoc in
+                let postData = postDoc.data()
+                do {
+                    let jsonData = try JSONSerialization.data(withJSONObject: postData, options: [])
+                    let post = try JSONDecoder().decode(PostModel.self, from: jsonData)
+                    postWithUsers.append(post)
+                } catch {
+                    print("Error decoding post data: \(error)")
+                }
+            }
+            
+            var userWithPosts: [(user: UserModel, posts: [PostModel])] = []
+            let group = DispatchGroup()
+            
+            postWithUsers.forEach { post in
+                let userID = post.userID
+                
+                group.enter()
+                db.collection(FirebaseConstants.usersCollection).document(userID).getDocument { userDoc, error in
+                    if let userDoc = userDoc, userDoc.exists, let userData = userDoc.data() {
+                        do {
+                            let jsonData = try JSONSerialization.data(withJSONObject: userData, options: [])
+                            let user = try JSONDecoder().decode(UserModel.self, from: jsonData)
+                            
+                            // User ve onun postlarını ekle
+                            if let index = userWithPosts.firstIndex(where: { $0.user.userID == userID }) {
+                                userWithPosts[index].posts.append(post)
+                            } else {
+                                userWithPosts.append((user: user, posts: [post]))
+                            }
+                        } catch {
+                            print("Error decoding user data: \(error)")
+                        }
+                    }
+                    group.leave()
+                }
+            }
+            
+            group.notify(queue: .main) {
+                completion(.success(userWithPosts))
+            }
+        }
+    }
+}
