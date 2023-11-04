@@ -8,6 +8,7 @@
 import UIKit
 import SwiftUI
 import SnapKit
+import StoreKit
 
 final class SettingsVC: UIViewController {
     
@@ -23,7 +24,9 @@ final class SettingsVC: UIViewController {
         let settingsView = UIHostingController(
             rootView: SettingsView(viewModel: SettingsViewModel(
                 cellViewModels: SettingsOption.allCases.compactMap({
-                    return SettingsCellViewModel(type: $0)
+                    return SettingsCellViewModel(type: $0) { [weak self] option in
+                        self?.handleTap(option: option)
+                    }
                 }))))
         addChild(settingsView)
         settingsView.didMove(toParent: self)
@@ -32,6 +35,33 @@ final class SettingsVC: UIViewController {
         
         settingsView.view.snp.makeConstraints { make in
             make.edges.equalTo(view.safeAreaLayoutGuide.snp.edges)
+        }
+    }
+    
+    private func handleTap(option: SettingsOption) {
+        guard Thread.current.isMainThread else {
+            return
+        }
+        
+        if let targetUrl = option.targetUrl {
+            switch option {
+            case .rateApp:
+                Task { @MainActor [weak self] in
+                    if let windowScene = self?.view.window?.windowScene {
+                        SKStoreReviewController.requestReview(in: windowScene)
+                    }
+                }
+            case .contactUs:
+                presentSafariVC(url: targetUrl)
+            case .terms:
+                presentSafariVC(url: targetUrl)
+            case .pricavy:
+                presentSafariVC(url: targetUrl)
+            case .apiReference:
+                presentSafariVC(url: targetUrl)
+            case .viewCode:
+                presentSafariVC(url: targetUrl)
+            }
         }
     }
 }

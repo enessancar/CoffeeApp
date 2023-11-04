@@ -79,4 +79,13 @@ struct StringConstants {
         static let secondAgo = "second ago"
         static let now       = "now"
     }
+    
+    enum Settings {
+        static let contact   = "https://www.starbucks.com.tr/"
+        static let privacy   = "https://www.starbuckschilled.com/uk/privacy-policy/"
+        static let terms     = "https://www.starbucks.com/rewards/terms/"
+        static let apiReference = "https://starbucks.docs.apiary.io/#"
+        static let viewCode = "https://github.com/enessancar/CoffeeApp"
+        static let rateApp = "https://apps.apple.com/tr/app/starbucks-t%C3%BCrkiye/id1100698915"
+    }
 }

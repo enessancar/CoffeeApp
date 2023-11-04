@@ -15,6 +15,23 @@ enum SettingsOption: CaseIterable {
     case apiReference
     case viewCode
     
+    var targetUrl: URL? {
+        switch self {
+        case .rateApp:
+            return URL(string: StringConstants.Settings.rateApp)
+        case .contactUs:
+            return URL(string: StringConstants.Settings.contact)
+        case .terms:
+            return URL(string: StringConstants.Settings.terms)
+        case .pricavy:
+            return URL(string: StringConstants.Settings.privacy)
+        case .apiReference:
+            return URL(string: StringConstants.Settings.apiReference)
+        case .viewCode:
+            return URL(string: StringConstants.Settings.viewCode)
+        }
+    }
+    
     var displayTitle: String {
         switch self {
         case .rateApp:

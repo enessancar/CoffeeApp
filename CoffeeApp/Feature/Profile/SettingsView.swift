@@ -36,7 +36,7 @@ struct SettingsView: View {
             }
             .padding(.bottom,4)
             .onTapGesture {
-                
+                viewModel.onTapHandler(viewModel.type)
             }
         }
     }
@@ -44,6 +44,8 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView(viewModel: .init(cellViewModels: SettingsOption.allCases.compactMap({
-        return SettingsCellViewModel(type: $0)
+        return SettingsCellViewModel(type: $0) { option in
+            
+        }
     })))
 }

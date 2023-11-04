@@ -7,15 +7,16 @@
 
 import UIKit
 
-struct SettingsCellViewModel: Identifiable, Hashable {
+struct SettingsCellViewModel: Identifiable {
     let id = UUID()
     
-    private let type: SettingsOption
-    
+    public let type: SettingsOption
+    public let onTapHandler: (SettingsOption) -> ()
     
     //MARK: - Init
-    init(type: SettingsOption) {
+    init(type: SettingsOption, onTapHandler: @escaping(SettingsOption) -> ()) {
         self.type = type
+        self.onTapHandler = onTapHandler
     }
     
     public var image: UIImage? {
