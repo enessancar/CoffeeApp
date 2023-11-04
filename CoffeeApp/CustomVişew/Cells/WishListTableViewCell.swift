@@ -65,7 +65,7 @@ final class WishListTableViewCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private func configureCell(coffee: CoffeeModel) {
+    public func configureCell(coffee: CoffeeModel) {
         coffeeNameLabel.text = coffee.name
         coffeeImageView.kf.setImage(with: coffee.imageURL.asUrl)
         coffeeDescriptionLabel.text = coffee.description

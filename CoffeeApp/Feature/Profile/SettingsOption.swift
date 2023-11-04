@@ -11,7 +11,7 @@ enum SettingsOption: CaseIterable {
     case rateApp
     case contactUs
     case terms
-    case pricavy
+    case privacy
     case apiReference
     case viewCode
     
@@ -23,7 +23,7 @@ enum SettingsOption: CaseIterable {
             return URL(string: StringConstants.Settings.contact)
         case .terms:
             return URL(string: StringConstants.Settings.terms)
-        case .pricavy:
+        case .privacy:
             return URL(string: StringConstants.Settings.privacy)
         case .apiReference:
             return URL(string: StringConstants.Settings.apiReference)
@@ -35,17 +35,17 @@ enum SettingsOption: CaseIterable {
     var displayTitle: String {
         switch self {
         case .rateApp:
-            "Rate App"
+            return "Rate App"
         case .contactUs:
-            "Contact Us"
+            return "Contact Us"
         case .terms:
-            "Terms of Service"
-        case .pricavy:
-            "Privacy Policy"
+            return "Terms of Service"
+        case .privacy:
+            return "Privacy Policy"
         case .apiReference:
-            "API Reference"
+            return "API Reference"
         case .viewCode:
-            "View App Code"
+            return "View App Code"
         }
     }
     
@@ -57,7 +57,7 @@ enum SettingsOption: CaseIterable {
             return .systemGreen
         case .terms:
             return .systemRed
-        case .pricavy:
+        case .privacy:
             return .systemYellow
         case .apiReference:
             return .systemOrange
@@ -66,20 +66,21 @@ enum SettingsOption: CaseIterable {
         }
     }
     
+    
     var iconImage: UIImage? {
         switch self {
         case .rateApp:
-            return UIImage(systemName: "star.fill")
+            return UIImage(systemName: Icons.rate)
         case .contactUs:
-            return UIImage(systemName: "paperplane")
+            return UIImage(systemName: Icons.contact)
         case .terms:
-            return UIImage(systemName: "doc")
-        case .pricavy:
-            return UIImage(systemName: "lock")
+            return UIImage(systemName: Icons.terms)
+        case .privacy:
+            return UIImage(systemName: Icons.privacy)
         case .apiReference:
-            return UIImage(systemName: "list.clipboard")
+            return UIImage(systemName: Icons.apiReference)
         case .viewCode:
-            return UIImage(systemName: "hammer.fill")
+            return UIImage(systemName: Icons.viewCode)
         }
     }
 }

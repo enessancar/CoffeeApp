@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-final class RegisterVC: DataLoadingVC {
+final class RegisterVC: UIViewController {
     //MARK: - Properties
     private let logoImageView: UIImageView = {
         let imageView = UIImageView()
@@ -71,7 +71,6 @@ extension RegisterVC {
         view.addSubview(passwordTextField)
         view.addSubview(registerButton)
         
-        
         registerButton.addTarget(self, action: #selector(handleRegister), for: .touchUpInside)
     }
     
@@ -125,7 +124,6 @@ extension RegisterVC {
         photoPickerManager.presentPhotoPicker(on: self)
     }
     @objc private func handleRegister() {
-        showLoadingView()
         guard let email = emailTextField.text,
               let password = passwordTextField.text,
               let name = nameTextField.text,
@@ -135,22 +133,19 @@ extension RegisterVC {
             return
         }
         if email.isEmpty || password.isEmpty || name.isEmpty || username.isEmpty {
-            dismissLoadingView()
             showAlert(title: StringConstants.General.error, message: StringConstants.General.fillFields)
         } else {
             AuthenticationService.shared.signUp(email: email, password: password, name: name, username: username, profileImage: profileImage) { result in
                 switch result {
                 case .success:
                     self.showAlert(title: StringConstants.General.success, message: StringConstants.General.registerSuccess) {
-                        self.navigationController?.popViewController(animated: true)
-                        
+                        self.navigationController?.popToRootViewController(animated: true)
                     }
 
-                case .failure(_):
+                case .failure(let error):
                     self.showAlert(title: StringConstants.General.error,
-                                   message: Errors.authenticationFailed)
+                                   message: error.localizedDescription )
                 }
-                self.dismissLoadingView()
             }
         }
     }

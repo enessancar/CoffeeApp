@@ -68,6 +68,10 @@ struct StringConstants {
         static let wishlist = "Wish List"
     }
     
+    enum Search {
+        static let placeHolder = "Search for the coffee"
+    }
+    
     enum BasketVC {
         static let basket = "Basket"
     }

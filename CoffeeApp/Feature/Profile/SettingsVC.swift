@@ -9,6 +9,7 @@ import UIKit
 import SwiftUI
 import SnapKit
 import StoreKit
+import FirebaseAuth
 
 final class SettingsVC: UIViewController {
     
@@ -18,6 +19,17 @@ final class SettingsVC: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .white
         addSettingsView()
+        setupSignOutButton()
+    }
+    
+    private func setupSignOutButton() {
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: Icons.signOut),
+            style: .done,
+            target: self,
+            action: #selector(signOutButtonTapped))
+        
+        navigationItem.rightBarButtonItem?.tintColor = .red
     }
     
     private func addSettingsView() {
@@ -55,7 +67,7 @@ final class SettingsVC: UIViewController {
                 presentSafariVC(url: targetUrl)
             case .terms:
                 presentSafariVC(url: targetUrl)
-            case .pricavy:
+            case .privacy:
                 presentSafariVC(url: targetUrl)
             case .apiReference:
                 presentSafariVC(url: targetUrl)
@@ -63,5 +75,13 @@ final class SettingsVC: UIViewController {
                 presentSafariVC(url: targetUrl)
             }
         }
+    }
+}
+
+extension SettingsVC {
+    @objc private func signOutButtonTapped() {
+        AuthenticationService.shared.signOut()
+        let onboardVC = SplashVC()
+        navigationController?.setViewControllers([onboardVC], animated: true)
     }
 }

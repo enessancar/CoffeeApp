@@ -32,4 +32,12 @@ enum Icons {
     static let plus = "plus.app.fill"
     static let minus = "minus.square.fill"
     static let post = "circle.rectangle.dashed"
+    
+    static let rate = "star.fill"
+    static let contact = "paperplane"
+    static let terms = "doc"
+    static let privacy = "lock"
+    static let apiReference = "list.clipboard"
+    static let viewCode = "hammer.fill"
+    static let signOut = "rectangle.portrait.and.arrow.right"
 }

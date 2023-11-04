@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class LoginVC: DataLoadingVC {
+final class LoginVC: UIViewController {
     
     private let loginView = LoginView()
     
@@ -32,7 +32,6 @@ extension LoginVC: LoginViewProtocol {
     }
     
     func loginButtonTapped() {
-        showLoadingView()
         guard let email = loginView.emailTextField.text,
               let password = loginView.passwordTextField.text else {
             
@@ -41,7 +40,6 @@ extension LoginVC: LoginViewProtocol {
             return
         }
         if email.isEmpty || password.isEmpty {
-            dismissLoadingView()
             showAlert(title: StringConstants.General.error,
                       message: StringConstants.General.fillFields)
         } else {
@@ -57,7 +55,6 @@ extension LoginVC: LoginViewProtocol {
                     self.showAlert(title: StringConstants.General.error,
                                    message: Errors.authenticationFailed)
                 }
-                self.dismissLoadingView()
             }
         }
     }
