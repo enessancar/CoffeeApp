@@ -17,6 +17,7 @@
 		EC16A71B2AF6C98D00EA3576 /* BasketVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC16A71A2AF6C98D00EA3576 /* BasketVC.swift */; };
 		EC16A71E2AF8257500EA3576 /* CoffeeDetailVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC16A71D2AF8257500EA3576 /* CoffeeDetailVC.swift */; };
 		EC16A7202AF82C9500EA3576 /* CoffeeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC16A71F2AF82C9500EA3576 /* CoffeeDetailView.swift */; };
+		EC16A7232AF8FE9100EA3576 /* PostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC16A7222AF8FE9100EA3576 /* PostView.swift */; };
 		EC42324F2AEE47A600FC7D65 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = EC42324E2AEE47A600FC7D65 /* FirebaseAnalytics */; };
 		EC4232512AEE47A600FC7D65 /* FirebaseAnalyticsOnDeviceConversion in Frameworks */ = {isa = PBXBuildFile; productRef = EC4232502AEE47A600FC7D65 /* FirebaseAnalyticsOnDeviceConversion */; };
 		EC4232532AEE47A600FC7D65 /* FirebaseAnalyticsSwift in Frameworks */ = {isa = PBXBuildFile; productRef = EC4232522AEE47A600FC7D65 /* FirebaseAnalyticsSwift */; };
@@ -106,6 +107,7 @@
 		EC9AAD8F2AEDA47100EB63EE /* CustomTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC9AAD8E2AEDA47100EB63EE /* CustomTextField.swift */; };
 		EC9AAD922AEDC1C300EB63EE /* CustomButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC9AAD912AEDC1C300EB63EE /* CustomButton.swift */; };
 		EC9AAD952AEDC3E100EB63EE /* LoginLogoImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC9AAD942AEDC3E100EB63EE /* LoginLogoImageView.swift */; };
+		ECC6AB082AF9019300C6C194 /* DataLoadingVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECC6AB072AF9019300C6C194 /* DataLoadingVC.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -119,6 +121,7 @@
 		EC16A71A2AF6C98D00EA3576 /* BasketVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasketVC.swift; sourceTree = "<group>"; };
 		EC16A71D2AF8257500EA3576 /* CoffeeDetailVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoffeeDetailVC.swift; sourceTree = "<group>"; };
 		EC16A71F2AF82C9500EA3576 /* CoffeeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoffeeDetailView.swift; sourceTree = "<group>"; };
+		EC16A7222AF8FE9100EA3576 /* PostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostView.swift; sourceTree = "<group>"; };
 		EC4232842AEE489800FC7D65 /* OnboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardView.swift; sourceTree = "<group>"; };
 		EC4232862AEE489F00FC7D65 /* OnboardVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardVC.swift; sourceTree = "<group>"; };
 		EC4232892AEE495B00FC7D65 /* AuthenticationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationService.swift; sourceTree = "<group>"; };
@@ -178,6 +181,7 @@
 		EC9AAD8E2AEDA47100EB63EE /* CustomTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTextField.swift; sourceTree = "<group>"; };
 		EC9AAD912AEDC1C300EB63EE /* CustomButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomButton.swift; sourceTree = "<group>"; };
 		EC9AAD942AEDC3E100EB63EE /* LoginLogoImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginLogoImageView.swift; sourceTree = "<group>"; };
+		ECC6AB072AF9019300C6C194 /* DataLoadingVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLoadingVC.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -387,6 +391,7 @@
 		EC9AACF02AEBE68000EB63EE /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				ECC6AB062AF9018900C6C194 /* DataLoading */,
 				EC9AAD6B2AED767200EB63EE /* Constants */,
 				EC9AACF92AEBEDDE00EB63EE /* Size */,
 				EC9AACF12AEBE6E600EB63EE /* Extensions */,
@@ -513,6 +518,7 @@
 		EC9AAD812AED9D2500EB63EE /* Post */ = {
 			isa = PBXGroup;
 			children = (
+				EC16A7222AF8FE9100EA3576 /* PostView.swift */,
 				EC9AAD862AED9D8600EB63EE /* PostVC.swift */,
 			);
 			path = Post;
@@ -553,6 +559,14 @@
 				EC9AAD942AEDC3E100EB63EE /* LoginLogoImageView.swift */,
 			);
 			path = ImageView;
+			sourceTree = "<group>";
+		};
+		ECC6AB062AF9018900C6C194 /* DataLoading */ = {
+			isa = PBXGroup;
+			children = (
+				ECC6AB072AF9019300C6C194 /* DataLoadingVC.swift */,
+			);
+			path = DataLoading;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -676,6 +690,7 @@
 				EC9AAD832AED9D5500EB63EE /* HomeVC.swift in Sources */,
 				EC16A7202AF82C9500EA3576 /* CoffeeDetailView.swift in Sources */,
 				EC9AACF32AEBE6F500EB63EE /* CGFloat+Ext.swift in Sources */,
+				EC16A7232AF8FE9100EA3576 /* PostView.swift in Sources */,
 				EC42329B2AEE5DFE00FC7D65 /* ShoppingCardItemModel.swift in Sources */,
 				EC9AAD7C2AED9C9900EB63EE /* MainTabBarController.swift in Sources */,
 				EC9AAD6F2AED76E200EB63EE /* AppColors.swift in Sources */,
@@ -731,6 +746,7 @@
 				EC9AACFD2AEBEE5000EB63EE /* FontSize.swift in Sources */,
 				EC42329D2AEE5FD600FC7D65 /* SpecialModel.swift in Sources */,
 				EC4232A22AEE942A00FC7D65 /* WishListTableViewCell.swift in Sources */,
+				ECC6AB082AF9019300C6C194 /* DataLoadingVC.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
