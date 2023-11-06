@@ -4,7 +4,7 @@
 //
 //  Created by Enes Sancar on 1.11.2023.
 //
-/*
+
 import UIKit
 import SnapKit
 
@@ -141,4 +141,3 @@ extension RegisterView {
         delegate?.editProfileImageButtonTapped()
     }
 }
-*/

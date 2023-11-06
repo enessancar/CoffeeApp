@@ -59,10 +59,10 @@ extension SearchVC: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let coffee = filteredCategoriesWithCoffee?[indexPath.section].1[indexPath.row]
-       // let detailVC = ()
-       // detailVC.coffee = coffee
-        //navigationController?.pushViewController(detailVC, animated: true)
-       // tableView.deselectRow(at: indexPath, animated: true)
+        let detailVC = CoffeeDetailVC()
+        detailVC.coffee = coffee
+        navigationController?.pushViewController(detailVC, animated: true)
+        tableView.deselectRow(at: indexPath, animated: true)
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
